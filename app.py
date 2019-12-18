@@ -14,6 +14,7 @@ import requests
 import pickle
 from optparse import OptionParser
 from matplotlib import pyplot as plt
+import time
  
 def parse_opts(parser):
     parser.add_option("-p","--port",action="store",type="int",dest="port",default=8080,help="the working port")
@@ -50,22 +51,33 @@ def checkpoint_ret():
         return 'Missing values', 400
     response = do_search(values.get("id"),marker='temp')
     return render_template('ret_v3.html',msgs=response,id=values.get("id"))
-@app.route('/transaction_ret', methods=['GET','POST'])
-def transaction_ret():
-    values = request.form
-    required = ['id']
-    if not all(k in values for k in required):
-        return 'Missing values', 400
-    response = do_search(values.get("id"),marker='src')
-    return render_template('ret_v2.html',msgs=response,id=values.get("id"))
-def do_search(id0,marker):
-    ret = []
-    chain = blockchain.chain
-    for item in chain:
-        for trans in item["transactions"]:
-            if marker in trans:
-                if id0 == trans["id"]:
-                    ret.append(trans)
+@app.route('/spark_ret', methods=['GET','POST'])
+def spark_ret():
+    f = "/text/README.md.Spark"
+    t = time.time()
+    ret = mk_png(f,t)
+    #return render_template('ret_v4.html')
+    return render_template(ret)
+@app.route('/hadoop_ret', methods=['GET','POST'])
+def hadoop_ret():
+    f = "/text/README.txt.Hadoop"
+    t = time.time()
+    ret = mk_png(f,t)
+    return render_template(ret)
+
+def mk_png(f,t):
+    ret = "ret." + str(t) + ".html"
+    cmd = ""
+    os.system("rm -f /tmp/ret.png")
+    os.system("rm -f /templates/ret.png")
+    cmd = "/wcount.py -f " + f
+    os.system(cmd)
+    cmd = "yes | cp /tmp/ret.png /static/img/ret." + str(t) + ".png"
+    os.system(cmd)
+    cmd = "yes | cp /ret.html.sed /templates/" + ret
+    os.system(cmd)
+    cmd = "sed -i s?{{.n}}?" + str(t) + "?g /templates/" + ret 
+    os.system(cmd)
     return ret
         
 if __name__ == '__main__':

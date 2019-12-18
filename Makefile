@@ -100,3 +100,9 @@ rm:
 
 stop:
 	-/usr/bin/docker $@ ${NAME}
+
+exec:
+	docker $@ -it ${NAME} /bin/bash
+
+logs:
+	docker $@ ${NAME}
